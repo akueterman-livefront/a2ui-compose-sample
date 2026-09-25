@@ -36,7 +36,7 @@ class AgenticUiViewModel : ViewModel() {
         urlOpener = {},
         messageFormatter = { pattern, _, _ -> pattern },
         localeProvider = A2uiLocaleProvider.Default,
-        choicePicker = RadioChoicePicker,
+        choicePicker = RadioChoicePicker,// Specific override
     )
 
     private val processor = A2uiMessageProcessor(catalogs = listOf(catalog))

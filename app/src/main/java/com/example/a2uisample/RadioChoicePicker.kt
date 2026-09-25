@@ -58,7 +58,10 @@ object RadioChoicePicker : A2uiBasicCatalogV1.ChoicePicker {
 
         Column(modifier = modifier.selectableGroup()) {
             if (!label.isNullOrEmpty()) {
-                Text(text = label, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                )
             }
             options.forEach { option ->
                 val selected = option.value in value
@@ -75,8 +78,15 @@ object RadioChoicePicker : A2uiBasicCatalogV1.ChoicePicker {
                         .padding(vertical = 4.dp),
                 ) {
                     // onClick is null because the whole row handles selection.
-                    RadioButton(selected = selected, onClick = null, enabled = enabled)
-                    Text(text = option.label, modifier = Modifier.padding(start = 12.dp))
+                    RadioButton(
+                        selected = selected,
+                        onClick = null,
+                        enabled = enabled,
+                    )
+                    Text(
+                        text = option.label,
+                        modifier = Modifier.padding(start = 12.dp),
+                    )
                 }
             }
         }
