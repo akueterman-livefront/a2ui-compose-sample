@@ -25,19 +25,31 @@ class FakeAgent {
 
     /** Responds to user actions dispatched from the surface. */
     fun respondTo(event: A2uiClientEventMessage): List<String> = when (event.type) {
-        "greet" -> {
-            val name = (event.context["name"] as? String).orEmpty().ifBlank { "stranger" }
-            listOf(greetingUpdate("Hello, $name! This text came back from the agent."))
-        }
+        "placeOrder" -> listOf(summaryUpdate(describeOrder(event.context)))
         else -> emptyList()
+    }
+
+    // The event context arrives with each data binding already resolved to its current value.
+    private fun describeOrder(context: Map<String, Any?>): String {
+        val size = (context["size"] as? List<*>)?.firstOrNull()?.toString() ?: "medium"
+        val extras = (context["extras"] as? List<*>).orEmpty().map { EXTRA_LABELS[it] ?: it }
+        val sweetness = (context["sweetness"] as? Number)?.toInt() ?: 0
+        val toGo = context["toGo"] == true
+
+        val withExtras = if (extras.isEmpty()) "" else " with ${extras.joinToString()}"
+        val where = if (toGo) "to go" else "for here"
+        return "Order placed: ${size.replaceFirstChar(Char::uppercase)} coffee$withExtras, " +
+            "sweetness $sweetness/5, $where."
     }
 
     private companion object {
         const val STREAM_DELAY_MS = 800L
-        const val SURFACE_ID = "hello_surface"
+        const val SURFACE_ID = "coffee_order"
 
         // The Basic Catalog ID the AndroidX renderer registers. The agent must reference the same ID.
         const val CATALOG_ID = A2uiBasicCatalogV1.CatalogId
+
+        val EXTRA_LABELS = mapOf("oat" to "oat milk", "shot" to "an extra shot", "vanilla" to "vanilla")
 
         val CREATE_SURFACE = """
             {
@@ -46,7 +58,8 @@ class FakeAgent {
             }
         """.trimIndent()
 
-        // A flat adjacency list: parents reference children by ID.
+        // A flat adjacency list: parents reference children by ID. Every input binds to a path in
+        // the data model, and the button's event context reads those same paths back.
         val UPDATE_COMPONENTS = """
             {
               "version": "v0.9.1",
@@ -54,16 +67,40 @@ class FakeAgent {
                 "surfaceId": "$SURFACE_ID",
                 "components": [
                   { "id": "root", "component": "Column",
-                    "children": ["title", "name_field", "greet_button", "greeting"] },
-                  { "id": "title", "component": "Text", "text": "Agent-rendered UI", "variant": "h2" },
-                  { "id": "name_field", "component": "TextField",
-                    "label": "Your name", "value": { "path": "/form/name" } },
-                  { "id": "greet_label", "component": "Text", "text": "Say hello" },
-                  { "id": "greet_button", "component": "Button", "child": "greet_label",
+                    "children": ["title", "size_picker", "extras_picker", "sweetness_slider",
+                                 "to_go_checkbox", "divider", "order_button", "summary"] },
+                  { "id": "title", "component": "Text", "text": "Build your coffee", "variant": "h2" },
+                  { "id": "size_picker", "component": "ChoicePicker", "label": "Size",
+                    "variant": "mutuallyExclusive",
+                    "options": [
+                      { "label": "Small", "value": "small" },
+                      { "label": "Medium", "value": "medium" },
+                      { "label": "Large", "value": "large" }
+                    ],
+                    "value": { "path": "/order/size" } },
+                  { "id": "extras_picker", "component": "ChoicePicker", "label": "Extras",
+                    "variant": "multipleSelection", "displayStyle": "chips",
+                    "options": [
+                      { "label": "Oat milk", "value": "oat" },
+                      { "label": "Extra shot", "value": "shot" },
+                      { "label": "Vanilla", "value": "vanilla" }
+                    ],
+                    "value": { "path": "/order/extras" } },
+                  { "id": "sweetness_slider", "component": "Slider", "label": "Sweetness",
+                    "min": 0, "max": 5, "value": { "path": "/order/sweetness" } },
+                  { "id": "to_go_checkbox", "component": "CheckBox", "label": "To go",
+                    "value": { "path": "/order/toGo" } },
+                  { "id": "divider", "component": "Divider" },
+                  { "id": "order_label", "component": "Text", "text": "Place order" },
+                  { "id": "order_button", "component": "Button", "child": "order_label",
                     "variant": "primary",
-                    "action": { "event": { "name": "greet",
-                      "context": { "name": { "path": "/form/name" } } } } },
-                  { "id": "greeting", "component": "Text", "text": { "path": "/greeting" } }
+                    "action": { "event": { "name": "placeOrder", "context": {
+                      "size": { "path": "/order/size" },
+                      "extras": { "path": "/order/extras" },
+                      "sweetness": { "path": "/order/sweetness" },
+                      "toGo": { "path": "/order/toGo" }
+                    } } } },
+                  { "id": "summary", "component": "Text", "text": { "path": "/summary" } }
                 ]
               }
             }
@@ -74,17 +111,20 @@ class FakeAgent {
               "version": "v0.9.1",
               "updateDataModel": {
                 "surfaceId": "$SURFACE_ID",
-                "value": { "form": { "name": "" }, "greeting": "Type a name and tap the button." }
+                "value": {
+                  "order": { "size": ["medium"], "extras": [], "sweetness": 2, "toGo": false },
+                  "summary": "Pick your options and place the order."
+                }
               }
             }
         """.trimIndent()
 
-        fun greetingUpdate(text: String): String = """
+        fun summaryUpdate(text: String): String = """
             {
               "version": "v0.9.1",
               "updateDataModel": {
                 "surfaceId": "$SURFACE_ID",
-                "path": "/greeting",
+                "path": "/summary",
                 "value": ${JSONObject.quote(text)}
               }
             }

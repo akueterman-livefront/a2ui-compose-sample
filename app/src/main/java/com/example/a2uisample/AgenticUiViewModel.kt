@@ -27,7 +27,7 @@ class AgenticUiViewModel : ViewModel() {
     private val parser = A2uiMessageParser()
 
     // The Material 3 Basic Catalog. Media components need host-provided renderers; this sample
-    // doesn't use them, so they're no-ops.
+    // doesn't use them, so they're no-ops. ChoicePicker is swapped for a radio-button renderer.
     private val catalog = materialA2uiBasicCatalogV1(
         image = MaterialA2uiBasicCatalogV1Defaults.image { _, _, _, _, _ -> },
         video = MaterialA2uiBasicCatalogV1Defaults.video { _, _, _ -> },
@@ -35,6 +35,7 @@ class AgenticUiViewModel : ViewModel() {
         urlOpener = {},
         messageFormatter = { pattern, _, _ -> pattern },
         localeProvider = A2uiLocaleProvider.Default,
+        choicePicker = RadioChoicePicker,
     )
 
     private val processor = A2uiMessageProcessor(catalogs = listOf(catalog))
