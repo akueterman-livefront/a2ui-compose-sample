@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 private const val TAG = "A2UI"
@@ -46,8 +47,8 @@ class AgenticUiViewModel : ViewModel() {
         // The processor only handles queued messages while this loop is running.
         viewModelScope.launch(Dispatchers.Default) { processor.collectMessages() }
 
-        // Client -> agent: user actions and errors.
-        viewModelScope.launch { processor.outboundEvents.collect(::onOutboundMessage) }
+        // Client -> agent: user actions and errors. A newer action cancels a reply still in progress.
+        viewModelScope.launch { processor.outboundEvents.collectLatest(::onOutboundMessage) }
 
         // Agent -> client: the message stream.
         viewModelScope.launch { agent.connect().collect(::onAgentMessage) }
@@ -58,10 +59,10 @@ class AgenticUiViewModel : ViewModel() {
         processor.processInput(parser, json)
     }
 
-    private fun onOutboundMessage(message: A2uiClientToServerMessage) {
+    private suspend fun onOutboundMessage(message: A2uiClientToServerMessage) {
         Log.d(TAG, "client -> agent: $message")
         when (message) {
-            is A2uiClientEventMessage -> agent.respondTo(message).forEach(::onAgentMessage)
+            is A2uiClientEventMessage -> agent.respondTo(message).collect(::onAgentMessage)
             is A2uiClientErrorMessage -> Log.w(TAG, "Renderer reported an error: ${message.message}")
         }
     }
