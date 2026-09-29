@@ -9,6 +9,18 @@ Two agents implement the same `Agent` interface, so you can pick either one:
 
 Either way, you can watch user input turn into agent output turn into components.
 
+## Demo
+
+|`FakeAgent`|`ClaudeAgent`|
+|:---:|:---:|
+|https://github.com/user-attachments/assets/c237d74f-df62-4f54-873e-1206fafb72f4|https://github.com/user-attachments/assets/a91ce07e-df74-4914-a519-db2c44257a5a|
+
+
+
+
+
+
+
 ## Flow
 
 ```
