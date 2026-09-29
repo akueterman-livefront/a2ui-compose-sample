@@ -25,7 +25,8 @@ event context carries the current selections, and the agent picks the next UI fr
 | Picks a type, taps Next | `chooseType` (`type`) | Add-in chips for that type: Hot → Half & half, Milk. Cold → Sweetener, Ice |
 | Picks add-ins, taps Next | `chooseAddIns` (`type`, `addIns`) | Sweetness slider if Sweetener was picked, otherwise checkout |
 | Sets sweetness, taps Next | `chooseSweetness` (`+ sweetness`) | Checkout: To go checkbox + Place order |
-| Taps Place order | `placeOrder` (`+ toGo`) | Order summary |
+| Taps Place order | `placeOrder` (`+ toGo`) | Order summary + Start a new order (replaces the selection steps) |
+| Taps Start a new order | `startOver` (none) | Resets the data model and shows the coffee type radios again |
 
 The agent is stateless, like an LLM: every turn it re-sends the whole component tree for the
 steps reached so far (components are replaced by ID). Changing an earlier answer and tapping

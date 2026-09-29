@@ -32,6 +32,12 @@ class FakeAgent {
             emit(setData("/prompt", "Thinking…"))
             delay(THINKING_DELAY_MS.milliseconds)
 
+            if (event.type == "startOver") {
+                emit(setData(path = null, value = initialData()))
+                emit(render(listOf(Step.CoffeeType), Order.EMPTY))
+                return@flow
+            }
+
             val order = Order.from(event.context)
             if (order.type == null) {
                 emit(setData("/prompt", "Pick hot or cold first."))
@@ -40,7 +46,6 @@ class FakeAgent {
 
             when (event.type) {
                 "chooseType" -> {
-                    // New type, new add-in options: clear any add-ins picked for the old type.
                     emit(setData("/order/addIns", JSONArray()))
                     emit(setData("/prompt", "${order.typeLabel} coffee, nice. Any add-ins?"))
                     emit(render(listOf(Step.CoffeeType, Step.AddIns), order))
@@ -64,7 +69,7 @@ class FakeAgent {
                 "placeOrder" -> {
                     emit(setData("/summary", order.describe()))
                     emit(setData("/prompt", "Thanks! Your order is in."))
-                    emit(render(order.stepsThroughCheckout() + Step.Summary, order))
+                    emit(render(listOf(Step.Summary), order))
                 }
             }
         }
@@ -191,7 +196,7 @@ class FakeAgent {
                 Step.AddIns -> listOf("add_ins_picker", "add_ins_next")
                 Step.Sweetness -> listOf("sweetness_slider", "sweetness_next")
                 Step.Checkout -> listOf("divider", "to_go_checkbox", "order_button")
-                Step.Summary -> listOf("summary")
+                Step.Summary -> listOf("summary", "new_order_button")
             }
 
         fun componentsFor(
@@ -269,7 +274,8 @@ class FakeAgent {
                 }
 
                 Step.Summary -> {
-                    listOf(component("summary", "Text", "text" to path("/summary")))
+                    listOf(component("summary", "Text", "text" to path("/summary"))) +
+                        button("new_order_button", "Start a new order", "startOver")
                 }
             }
 
