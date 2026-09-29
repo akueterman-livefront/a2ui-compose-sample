@@ -128,7 +128,14 @@ class ClaudeAgent(
     /** Splits the reply into individual A2UI messages, failing if any of them is invalid. */
     private fun parseReply(reply: String): Result<List<String>> =
         try {
-            val array = JSONArray(reply.trim())
+            // Models often wrap JSON in a ```json fence despite the prompt.
+            val json =
+                reply
+                    .trim()
+                    .removePrefix("```json")
+                    .removePrefix("```")
+                    .removeSuffix("```")
+            val array = JSONArray(json.trim())
             Result.success(
                 List(array.length()) { i ->
                     array.getJSONObject(i).toString().also(parser::parse)
