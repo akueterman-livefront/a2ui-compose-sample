@@ -41,7 +41,8 @@ renderer. The agent's JSON doesn't change; the client decides how a component lo
 | `FakeAgent.kt` | The "model": decides the next step from each event and builds the A2UI messages |
 | `AgenticUiViewModel.kt` | Parser, Material 3 catalog (with the override), processor, both directions of traffic |
 | `RadioChoicePicker.kt` | Custom `ChoicePicker` renderer (radio buttons) plugged into the catalog |
-| `MainActivity.kt` | Renders each active surface with `A2uiSurface` |
+| `AgenticUiScreen.kt` | Renders each active surface with `A2uiSurface` |
+| `MainActivity.kt` | Hosts `AgenticUiScreen` in a `MaterialTheme` |
 
 ## Run
 

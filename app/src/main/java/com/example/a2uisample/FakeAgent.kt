@@ -19,10 +19,9 @@ import kotlin.time.Duration.Companion.milliseconds
 class FakeAgent {
     /** The opening turn: create the surface, seed the data model, and ask the first question. */
     fun connect(): Flow<String> =
-        @Suppress("ktlint:standard:max-line-length")
         flow {
             emit(createSurface())
-            delay(STREAM_DELAY_MS.milliseconds) // The surface shows its loading state until "root" arrives.
+            delay(STREAM_DELAY_MS.milliseconds)
             emit(setData(path = null, value = initialData()))
             emit(render(listOf(Step.CoffeeType), Order.EMPTY))
         }
@@ -85,7 +84,6 @@ class FakeAgent {
                 Step.CoffeeType,
                 Step.AddIns,
                 Step.Sweetness.takeIf { wantsSweetener },
-                @Suppress("ktlint:standard:max-line-length")
                 Step.Checkout,
             )
 
