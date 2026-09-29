@@ -21,7 +21,6 @@ import kotlinx.coroutines.launch
 private const val TAG = "A2UI"
 
 class AgenticUiViewModel : ViewModel() {
-
     private val agent = FakeAgent()
 
     // Parses raw JSON strings into typed A2UI protocol messages.
@@ -29,15 +28,16 @@ class AgenticUiViewModel : ViewModel() {
 
     // The Material 3 Basic Catalog. Media components need host-provided renderers; this sample
     // doesn't use them, so they're no-ops. ChoicePicker is swapped for a radio-button renderer.
-    private val catalog = materialA2uiBasicCatalogV1(
-        image = MaterialA2uiBasicCatalogV1Defaults.image { _, _, _, _, _ -> },
-        video = MaterialA2uiBasicCatalogV1Defaults.video { _, _, _ -> },
-        audioPlayer = MaterialA2uiBasicCatalogV1Defaults.audioPlayer { _, _, _, _ -> },
-        urlOpener = {},
-        messageFormatter = { pattern, _, _ -> pattern },
-        localeProvider = A2uiLocaleProvider.Default,
-        choicePicker = RadioChoicePicker,// Specific override
-    )
+    private val catalog =
+        materialA2uiBasicCatalogV1(
+            image = MaterialA2uiBasicCatalogV1Defaults.image { _, _, _, _, _ -> },
+            video = MaterialA2uiBasicCatalogV1Defaults.video { _, _, _ -> },
+            audioPlayer = MaterialA2uiBasicCatalogV1Defaults.audioPlayer { _, _, _, _ -> },
+            urlOpener = {},
+            messageFormatter = { pattern, _, _ -> pattern },
+            localeProvider = A2uiLocaleProvider.Default,
+            choicePicker = RadioChoicePicker, // Specific override
+        )
 
     private val processor = A2uiMessageProcessor(catalogs = listOf(catalog))
 
@@ -45,13 +45,19 @@ class AgenticUiViewModel : ViewModel() {
 
     init {
         // The processor only handles queued messages while this loop is running.
-        viewModelScope.launch(Dispatchers.Default) { processor.collectMessages() }
+        viewModelScope.launch(Dispatchers.Default) {
+            processor.collectMessages()
+        }
 
         // Client -> agent: user actions and errors. A newer action cancels a reply still in progress.
-        viewModelScope.launch { processor.outboundEvents.collectLatest(::onOutboundMessage) }
+        viewModelScope.launch {
+            processor.outboundEvents.collectLatest(::onOutboundMessage)
+        }
 
         // Agent -> client: the message stream.
-        viewModelScope.launch { agent.connect().collect(::onAgentMessage) }
+        viewModelScope.launch {
+            agent.connect().collect(::onAgentMessage)
+        }
     }
 
     private fun onAgentMessage(json: String) {
@@ -62,8 +68,16 @@ class AgenticUiViewModel : ViewModel() {
     private suspend fun onOutboundMessage(message: A2uiClientToServerMessage) {
         Log.d(TAG, "client -> agent: $message")
         when (message) {
-            is A2uiClientEventMessage -> agent.respondTo(message).collect(::onAgentMessage)
-            is A2uiClientErrorMessage -> Log.w(TAG, "Renderer reported an error: ${message.message}")
+            is A2uiClientEventMessage -> {
+                agent.respondTo(message).collect(::onAgentMessage)
+            }
+
+            is A2uiClientErrorMessage -> {
+                Log.w(
+                    TAG,
+                    "Renderer reported an error: ${message.message}",
+                )
+            }
         }
     }
 }

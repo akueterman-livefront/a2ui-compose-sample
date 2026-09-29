@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
  * doesn't change: how a component looks is the client's decision.
  */
 object RadioChoicePicker : A2uiBasicCatalogV1.ChoicePicker {
-
     private val stock = MaterialA2uiBasicCatalogV1Defaults.choicePicker
 
     @Composable
@@ -49,8 +48,17 @@ object RadioChoicePicker : A2uiBasicCatalogV1.ChoicePicker {
         if (variant != Variant.MutuallyExclusive || displayStyle != DisplayStyle.Checkbox) {
             with(stock) {
                 TypedContent(
-                    label, options, value, variant, displayStyle, filterable,
-                    onValueChange, enabled, accessibility, checks, modifier,
+                    label,
+                    options,
+                    value,
+                    variant,
+                    displayStyle,
+                    filterable,
+                    onValueChange,
+                    enabled,
+                    accessibility,
+                    checks,
+                    modifier,
                 )
             }
             return
@@ -67,15 +75,15 @@ object RadioChoicePicker : A2uiBasicCatalogV1.ChoicePicker {
                 val selected = option.value in value
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectable(
-                            selected = selected,
-                            enabled = enabled,
-                            role = Role.RadioButton,
-                            onClick = { onValueChange(listOf(option.value)) },
-                        )
-                        .padding(vertical = 4.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .selectable(
+                                selected = selected,
+                                enabled = enabled,
+                                role = Role.RadioButton,
+                                onClick = { onValueChange(listOf(option.value)) },
+                            ).padding(vertical = 4.dp),
                 ) {
                     // onClick is null because the whole row handles selection.
                     RadioButton(

@@ -22,10 +22,11 @@ internal fun AgenticUiScreen(viewModel: AgenticUiViewModel = viewModel()) {
 
     Scaffold { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp),
         ) {
             // Render every surface the agent has created.
             surfaces.forEach { surface ->
