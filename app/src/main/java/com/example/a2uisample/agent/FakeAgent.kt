@@ -1,6 +1,5 @@
-package com.example.a2uisample
+package com.example.a2uisample.agent
 
-import androidx.a2ui.compose.ui.catalog.A2uiBasicCatalogV1
 import androidx.a2ui.model.protocol.A2uiClientEventMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -16,9 +15,9 @@ import kotlin.time.Duration.Companion.milliseconds
  * user's current selections, and the agent decides from those alone which steps to show next. It
  * then re-sends the whole component tree for those steps, the way an LLM regenerates its output.
  */
-class FakeAgent {
+class FakeAgent : Agent {
     /** The opening turn: create the surface, seed the data model, and ask the first question. */
-    fun connect(): Flow<String> =
+    override fun connect(): Flow<String> =
         flow {
             emit(createSurface())
             delay(STREAM_DELAY_MS.milliseconds)
@@ -27,7 +26,7 @@ class FakeAgent {
         }
 
     /** One agent turn in response to a user action. */
-    fun respondTo(event: A2uiClientEventMessage): Flow<String> =
+    override fun respondTo(event: A2uiClientEventMessage): Flow<String> =
         flow {
             emit(setData("/prompt", "Thinking…"))
             delay(THINKING_DELAY_MS.milliseconds)
@@ -136,10 +135,6 @@ class FakeAgent {
     private companion object {
         const val STREAM_DELAY_MS = 800L
         const val THINKING_DELAY_MS = 600L
-        const val SURFACE_ID = "coffee_order"
-
-        // The Basic Catalog ID the AndroidX renderer registers. The agent must reference the same ID.
-        const val CATALOG_ID = A2uiBasicCatalogV1.CatalogId
 
         const val HOT = "hot"
         const val COLD = "cold"
@@ -323,29 +318,5 @@ class FakeAgent {
                     JSONObject().put("label", label).put("value", value)
                 },
             )
-
-        fun createSurface(): String = message("createSurface", "catalogId" to CATALOG_ID)
-
-        fun setData(
-            path: String?,
-            value: Any,
-        ): String =
-            message(
-                "updateDataModel",
-                *listOfNotNull(
-                    path?.let { "path" to it },
-                    "value" to value,
-                ).toTypedArray(),
-            )
-
-        /** Wraps a message body in the v0.9.1 envelope. */
-        fun message(
-            kind: String,
-            vararg body: Pair<String, Any>,
-        ): String {
-            val payload = JSONObject().put("surfaceId", SURFACE_ID)
-            body.forEach { (k, v) -> payload.put(k, v) }
-            return JSONObject().put("version", "v0.9.1").put(kind, payload).toString(2)
-        }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.a2uisample
+package com.example.a2uisample.ui.catalog
 
 import androidx.a2ui.compose.runtime.A2uiComponentScope
 import androidx.a2ui.compose.ui.catalog.A2uiBasicCatalogV1

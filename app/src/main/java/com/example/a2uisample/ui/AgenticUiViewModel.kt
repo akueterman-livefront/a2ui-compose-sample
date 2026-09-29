@@ -1,4 +1,4 @@
-package com.example.a2uisample
+package com.example.a2uisample.ui
 
 import android.util.Log
 import androidx.a2ui.compose.runtime.A2uiMessageParser
@@ -13,6 +13,9 @@ import androidx.compose.material3.a2ui.catalog.MaterialA2uiBasicCatalogV1Default
 import androidx.compose.material3.a2ui.catalog.materialA2uiBasicCatalogV1
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.a2uisample.agent.Agent
+import com.example.a2uisample.agent.createAgent
+import com.example.a2uisample.ui.catalog.RadioChoicePicker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -21,7 +24,7 @@ import kotlinx.coroutines.launch
 private const val TAG = "A2UI"
 
 class AgenticUiViewModel : ViewModel() {
-    private val agent = FakeAgent()
+    private val agent: Agent = createAgent().also { Log.i(TAG, "Agent: ${it::class.simpleName}") }
 
     // Parses raw JSON strings into typed A2UI protocol messages.
     private val parser = A2uiMessageParser()

@@ -6,6 +6,7 @@ activityCompose = "1.13.0"
 lifecycle = "2.11.0"
 # Pinned to what material3-a2ui 1.0.0-alpha01 requires.
 material3 = "1.5.0-alpha28"
+anthropic = "2.66.0"
 
 [libraries]
 # A2UI: protocol engine + Compose runtime/UI + Material 3 Basic Catalog.
@@ -17,6 +18,9 @@ androidx-material3 = { module = "androidx.compose.material3:material3", version.
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+
+# Claude API client, used by ClaudeAgent.
+anthropic-java = { module = "com.anthropic:anthropic-java", version.ref = "anthropic" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
