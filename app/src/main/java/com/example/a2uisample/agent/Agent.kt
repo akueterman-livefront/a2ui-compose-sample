@@ -21,11 +21,16 @@ interface Agent {
 
 /**
  * Picks the agent from `local.properties`: [ClaudeAgent] when `ANTHROPIC_API_KEY` is set,
- * otherwise [FakeAgent].
+ * otherwise [FakeAgent]. [catalogSchema] is the renderer's catalog as JSON Schema, which only
+ * [ClaudeAgent] uses.
  */
-fun createAgent(): Agent =
+fun createAgent(catalogSchema: String): Agent =
     if (BuildConfig.ANTHROPIC_API_KEY.isNotBlank()) {
-        ClaudeAgent(apiKey = BuildConfig.ANTHROPIC_API_KEY, model = BuildConfig.ANTHROPIC_MODEL)
+        ClaudeAgent(
+            apiKey = BuildConfig.ANTHROPIC_API_KEY,
+            model = BuildConfig.ANTHROPIC_MODEL,
+            catalogSchema = catalogSchema,
+        )
     } else {
         FakeAgent()
     }

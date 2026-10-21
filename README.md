@@ -51,7 +51,7 @@ Source is under `app/src/main/java/com/example/a2uisample/`, in three packages: 
 | `agent/Agent.kt` | The `Agent` interface both agents implement, and `createAgent()`, which picks one from `local.properties` |
 | `agent/FakeAgent.kt` | The offline "model": decides the next step from each event in Kotlin and builds the A2UI messages |
 | `agent/ClaudeAgent.kt` | The real agent: sends each event to Claude, validates the A2UI JSON it returns, and retries once if the JSON is invalid |
-| `agent/CoffeeAgentPrompt.kt` | Claude's system prompt: the coffee flow and component vocabulary in plain English |
+| `agent/CoffeeAgentPrompt.kt` | Claude's system prompt: the coffee flow in plain English, plus the renderer's catalog as JSON Schema |
 | `agent/A2uiMessages.kt` | Builders for the envelope, `createSurface` and `updateDataModel` messages both agents use |
 | `ui/AgenticUiViewModel.kt` | Parser, Material 3 catalog (with the override), processor, both directions of traffic |
 | `ui/catalog/RadioChoicePicker.kt` | Custom `ChoicePicker` renderer (radio buttons) plugged into the catalog |

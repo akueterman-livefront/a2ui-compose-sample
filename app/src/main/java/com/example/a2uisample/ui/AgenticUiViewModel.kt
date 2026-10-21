@@ -3,6 +3,7 @@ package com.example.a2uisample.ui
 import android.util.Log
 import androidx.a2ui.compose.runtime.A2uiMessageParser
 import androidx.a2ui.compose.ui.A2uiMessageProcessor
+import androidx.a2ui.compose.ui.toJsonSchemaString
 import androidx.a2ui.model.catalog.functions.A2uiLocaleProvider
 import androidx.a2ui.model.processor.A2uiSurfaceModel
 import androidx.a2ui.model.processor.processInput
@@ -24,8 +25,6 @@ import kotlinx.coroutines.launch
 private const val TAG = "A2UI"
 
 class AgenticUiViewModel : ViewModel() {
-    private val agent: Agent = createAgent().also { Log.i(TAG, "Agent: ${it::class.simpleName}") }
-
     // Parses raw JSON strings into typed A2UI protocol messages.
     private val parser = A2uiMessageParser()
 
@@ -41,6 +40,12 @@ class AgenticUiViewModel : ViewModel() {
             localeProvider = A2uiLocaleProvider.Default,
             choicePicker = RadioChoicePicker, // Specific override
         )
+
+    // The agent gets the catalog as JSON Schema, so an LLM agent's prompt matches what renders.
+    private val agent: Agent =
+        createAgent(catalogSchema = catalog.toJsonSchemaString()).also {
+            Log.i(TAG, "Agent: ${it::class.simpleName}")
+        }
 
     private val processor = A2uiMessageProcessor(catalogs = listOf(catalog))
 

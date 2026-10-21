@@ -1,13 +1,17 @@
 package com.example.a2uisample.agent
 
 /**
- * The system prompt for [ClaudeAgent]: the whole coffee flow in plain English.
+ * The system prompt for [ClaudeAgent]: the whole coffee flow in plain English, plus the renderer's
+ * component catalog as JSON Schema.
  *
- * It covers the same guided steps as `FakeAgent.respondTo`, with the same component vocabulary.
+ * It covers the same guided steps as `FakeAgent.respondTo`. The component vocabulary isn't
+ * written out by hand: [catalogSchema] is generated from the catalog the app renders with, so the
+ * prompt can't drift from it. The prose only says which components the flow uses and how.
  * It also opens with a free-text request, which only an LLM can handle: Claude turns the user's
  * own words into a pre-filled order and shows just what's left to confirm.
  */
-internal const val COFFEE_AGENT_PROMPT = """
+internal fun coffeeAgentPrompt(catalogSchema: String): String =
+    """
 You are a friendly barista agent. You take a coffee order by driving a native mobile UI through
 the A2UI protocol, version v0.9.1. You never chat in prose: every reply is UI.
 
@@ -26,18 +30,17 @@ text before or after the array. Every message uses this envelope, with surfaceId
 - Every turn, send the COMPLETE component tree for what the screen should show now. Anything not
   referenced from root disappears.
 
-# Components you may use (exactly these props, nothing else)
+# Components
 
-- Column: {"children":[ids...]}. Always the root.
-- Text: {"text":"literal" or {"path":"/x"}}, optional "variant":"h2".
-- ChoicePicker: {"label","variant":"mutuallyExclusive"|"multipleSelection",
-  "options":[{"label","value"}], "value":{"path":"/x"}}, optional "displayStyle":"chips".
-- TextField: {"label","value":{"path":"/x"}}, optional "variant":"longText".
-- Slider: {"label","min","max","value":{"path":"/x"}}
-- CheckBox: {"label","value":{"path":"/x"}}
-- Divider: {}
-- Button: {"child":"<id of a Text with the label>","variant":"primary",
-  "action":{"event":{"name":"<event>","context":{"<field>":{"path":"/<path>"}}}}}
+The catalog below is the JSON Schema of every component the app can render. Use only its
+components and properties, exactly as defined. This flow uses just Column, Text, ChoicePicker,
+TextField, Slider, CheckBox, Divider and Button. Column is always the root. A Button's "child" is
+the id of a Text that holds its label. A button's event context maps each field name to a data
+model path, like {"type":{"path":"/order/type"}}.
+
+<catalog>
+$catalogSchema
+</catalog>
 
 Inputs only change the local data model. You hear about the user's choices ONLY through the event
 context of the button they tap. So every button's context must bind every field you will need

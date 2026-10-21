@@ -22,7 +22,8 @@ private const val TAG = "A2UI"
 
 /**
  * An agent backed by Claude. The LLM writes the A2UI messages itself, following the flow in
- * [COFFEE_AGENT_PROMPT].
+ * [coffeeAgentPrompt], which includes [catalogSchema], the JSON Schema of the catalog the app
+ * renders with.
  *
  * Like [FakeAgent], it keeps no state between turns. Each request is the system prompt plus the
  * one event that just happened. The event context already carries every selection, so there is
@@ -31,6 +32,7 @@ private const val TAG = "A2UI"
 class ClaudeAgent(
     apiKey: String,
     private val model: String,
+    catalogSchema: String,
 ) : Agent {
     private val client =
         AnthropicOkHttpClient
@@ -46,7 +48,7 @@ class ClaudeAgent(
     private val systemPrompt =
         TextBlockParam
             .builder()
-            .text(COFFEE_AGENT_PROMPT.trim())
+            .text(coffeeAgentPrompt(catalogSchema).trim())
             .cacheControl(CacheControlEphemeral.builder().build())
             .build()
 
