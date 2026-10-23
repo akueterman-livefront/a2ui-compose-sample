@@ -10,6 +10,8 @@ import com.anthropic.errors.AnthropicServiceException
 import com.anthropic.models.messages.CacheControlEphemeral
 import com.anthropic.models.messages.MessageCreateParams
 import com.anthropic.models.messages.TextBlockParam
+import com.example.a2uisample.TAG
+import com.example.a2uisample.logLong
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
@@ -17,8 +19,6 @@ import kotlinx.coroutines.future.await
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-
-private const val TAG = "A2UI"
 
 /**
  * A brew troubleshooter backed by Claude. The LLM designs each screen itself, guided by
@@ -45,12 +45,15 @@ class ClaudeAgent(
 
     private val examples = TroubleshooterExamples()
 
-    // Marked cacheable, since it's identical on every request.
+    // Marked cacheable, since it's identical on every request. Logged once, here, for that reason.
     private val systemPrompt =
         TextBlockParam
             .builder()
-            .text(troubleshooterPrompt(catalogSchema, examples).trim())
-            .cacheControl(CacheControlEphemeral.builder().build())
+            .text(
+                troubleshooterPrompt(catalogSchema, examples).trim().also {
+                    logLong("System prompt (${it.length} chars):\n$it")
+                },
+            ).cacheControl(CacheControlEphemeral.builder().build())
             .build()
 
     // Earlier turns of this session, as (event, reply) pairs. Only valid replies are kept.
@@ -110,6 +113,7 @@ class ClaudeAgent(
                     }
                 }.addUserMessage(event)
                 .build()
+        Log.d(TAG, "client -> Claude: system prompt + ${history.size} earlier turns + $event")
         val reply = complete(request)
         val result = parseReply(reply)
         if (result.isSuccess) {
