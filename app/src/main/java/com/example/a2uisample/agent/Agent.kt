@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.Flow
  * for the renderer.
  *
  * Two implementations: [FakeAgent] hard-codes the coffee flow in Kotlin and needs no setup.
- * [ClaudeAgent] asks an LLM to write the same UI from a plain-English prompt.
+ * [ClaudeAgent] is a brew troubleshooter where an LLM designs each screen.
  */
 interface Agent {
-    /** The opening turn: create the surface and show the first step. */
+    /** The opening turn: create the surface and show the first screen. */
     fun connect(): Flow<String>
 
     /** One agent turn in response to a user action. */

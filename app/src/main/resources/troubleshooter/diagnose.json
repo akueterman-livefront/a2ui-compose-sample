@@ -1,0 +1,105 @@
+[
+  {
+    "version": "v0.9.1",
+    "updateDataModel": {
+      "surfaceId": "main",
+      "path": "/prompt",
+      "value": "Sour plus a fast shot almost always means under-extraction. Let's slow it down."
+    }
+  },
+  {
+    "version": "v0.9.1",
+    "updateDataModel": {
+      "surfaceId": "main",
+      "path": "/result",
+      "value": { "shotTime": 18, "taste": [] }
+    }
+  },
+  {
+    "version": "v0.9.1",
+    "updateComponents": {
+      "surfaceId": "main",
+      "components": [
+        {
+          "id": "root",
+          "component": "Column",
+          "children": [
+            "title",
+            "prompt",
+            "diagnosis_card",
+            "recipe_card",
+            "result_intro",
+            "shot_time_slider",
+            "result_taste",
+            "result_send",
+            "start_over"
+          ]
+        },
+        { "id": "title", "component": "Text", "text": "Brew troubleshooter", "variant": "h2" },
+        { "id": "prompt", "component": "Text", "text": { "path": "/prompt" } },
+        { "id": "diagnosis_card", "component": "Card", "child": "diagnosis_column" },
+        { "id": "diagnosis_column", "component": "Column", "children": ["diagnosis_title", "diagnosis_body"] },
+        { "id": "diagnosis_title", "component": "Text", "text": "Under-extracted", "variant": "h4" },
+        {
+          "id": "diagnosis_body",
+          "component": "Text",
+          "text": "Water is running through the puck too fast to pull out the sugars, so the acids dominate."
+        },
+        { "id": "recipe_card", "component": "Card", "child": "recipe_column" },
+        {
+          "id": "recipe_column",
+          "component": "Column",
+          "children": ["recipe_title", "recipe_step_1", "recipe_step_2", "recipe_step_3"]
+        },
+        { "id": "recipe_title", "component": "Text", "text": "Try this next shot", "variant": "h4" },
+        { "id": "recipe_step_1", "component": "Text", "text": "1. Grind two steps finer." },
+        { "id": "recipe_step_2", "component": "Text", "text": "2. Keep the dose at 18 g in and aim for 36 g out." },
+        { "id": "recipe_step_3", "component": "Text", "text": "3. Target 27 to 30 seconds." },
+        { "id": "result_intro", "component": "Text", "text": "Pull a shot, then tell me how it went.", "variant": "caption" },
+        {
+          "id": "shot_time_slider",
+          "component": "Slider",
+          "label": "Shot time (seconds)",
+          "min": 10,
+          "max": 45,
+          "value": { "path": "/result/shotTime" }
+        },
+        {
+          "id": "result_taste",
+          "component": "ChoicePicker",
+          "label": "How did it taste?",
+          "variant": "multipleSelection",
+          "displayStyle": "chips",
+          "options": [
+            { "label": "Sweet and balanced", "value": "balanced" },
+            { "label": "Still sour", "value": "sour" },
+            { "label": "Bitter now", "value": "bitter" },
+            { "label": "Thin", "value": "weak" }
+          ],
+          "value": { "path": "/result/taste" }
+        },
+        {
+          "id": "result_send",
+          "component": "Button",
+          "child": "result_send_label",
+          "variant": "primary",
+          "action": {
+            "event": {
+              "name": "reportResult",
+              "context": { "shotTime": { "path": "/result/shotTime" }, "taste": { "path": "/result/taste" } }
+            }
+          }
+        },
+        { "id": "result_send_label", "component": "Text", "text": "Report back" },
+        {
+          "id": "start_over",
+          "component": "Button",
+          "child": "start_over_label",
+          "variant": "borderless",
+          "action": { "event": { "name": "startOver", "context": {} } }
+        },
+        { "id": "start_over_label", "component": "Text", "text": "Start over" }
+      ]
+    }
+  }
+]

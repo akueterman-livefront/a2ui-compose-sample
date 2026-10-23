@@ -1,0 +1,38 @@
+[
+  {
+    "version": "v0.9.1",
+    "updateDataModel": {
+      "surfaceId": "main",
+      "value": {
+        "prompt": "Tell me what's off about your coffee, and how you brew it.",
+        "problem": ""
+      }
+    }
+  },
+  {
+    "version": "v0.9.1",
+    "updateComponents": {
+      "surfaceId": "main",
+      "components": [
+        { "id": "root", "component": "Column", "children": ["title", "prompt", "problem_field", "problem_send"] },
+        { "id": "title", "component": "Text", "text": "Brew troubleshooter", "variant": "h2" },
+        { "id": "prompt", "component": "Text", "text": { "path": "/prompt" } },
+        {
+          "id": "problem_field",
+          "component": "TextField",
+          "label": "What's going wrong?",
+          "variant": "longText",
+          "value": { "path": "/problem" }
+        },
+        {
+          "id": "problem_send",
+          "component": "Button",
+          "child": "problem_send_label",
+          "variant": "primary",
+          "action": { "event": { "name": "describeProblem", "context": { "problem": { "path": "/problem" } } } }
+        },
+        { "id": "problem_send_label", "component": "Text", "text": "Diagnose" }
+      ]
+    }
+  }
+]
