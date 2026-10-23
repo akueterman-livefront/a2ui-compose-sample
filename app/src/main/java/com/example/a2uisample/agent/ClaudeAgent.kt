@@ -21,13 +21,12 @@ import org.json.JSONObject
 private const val TAG = "A2UI"
 
 /**
- * An agent backed by Claude. The LLM writes the A2UI messages itself, following the flow in
- * [coffeeAgentPrompt], which includes [catalogSchema], the JSON Schema of the catalog the app
+ * A brew troubleshooter backed by Claude. The LLM designs each screen itself, guided by
+ * [troubleshooterPrompt], which includes [catalogSchema], the JSON Schema of the catalog the app
  * renders with.
  *
- * Like [FakeAgent], it keeps no state between turns. Each request is the system prompt plus the
- * one event that just happened. The event context already carries every selection, so there is
- * no chat history to send and the cost per turn stays flat.
+ * Unlike [FakeAgent], it keeps the session's conversation: a diagnosis builds on what the user
+ * said earlier and on the recipes already tried. "Start over" clears it.
  */
 class ClaudeAgent(
     apiKey: String,
@@ -44,29 +43,42 @@ class ClaudeAgent(
     // The same parser the renderer uses, here to reject a bad reply before it reaches the UI.
     private val parser = A2uiMessageParser()
 
+    private val examples = TroubleshooterExamples()
+
     // Marked cacheable, since it's identical on every request.
     private val systemPrompt =
         TextBlockParam
             .builder()
-            .text(coffeeAgentPrompt(catalogSchema).trim())
+            .text(troubleshooterPrompt(catalogSchema, examples).trim())
             .cacheControl(CacheControlEphemeral.builder().build())
             .build()
+
+    // Earlier turns of this session, as (event, reply) pairs. Only valid replies are kept.
+    private val history = ArrayDeque<Pair<String, String>>()
 
     override fun connect(): Flow<String> =
         flow {
             // The surface and catalog are app configuration, so the app creates the surface itself.
             emit(createSurface())
-            // A title and prompt right away, so the first request's wait or error has somewhere to show.
-            emit(setData(path = null, value = JSONObject().put("prompt", "Connecting to Claude…")))
-            emit(placeholderScreen())
-            takeTurn(JSONObject().put("name", "start"))
+            showStartScreen()
         }
 
     override fun respondTo(event: A2uiClientEventMessage): Flow<String> =
         flow {
+            if (event.type == "startOver") {
+                history.clear()
+                showStartScreen()
+                return@flow
+            }
             emit(setData("/prompt", "Thinking…"))
             takeTurn(JSONObject().put("name", event.type).put("context", JSONObject(event.context)))
         }
+
+    /** The opening screen never changes, so it comes straight from the example, not a request. */
+    private suspend fun FlowCollector<String>.showStartScreen() {
+        val messages = JSONArray(examples.start)
+        repeat(messages.length()) { emit(messages.getJSONObject(it).toString(2)) }
+    }
 
     /** Asks Claude for this turn's UI and emits it, or emits an error prompt if the call fails. */
     private suspend fun FlowCollector<String>.takeTurn(event: JSONObject) {
@@ -91,11 +103,19 @@ class ClaudeAgent(
                 .model(model)
                 .maxTokens(MAX_TOKENS)
                 .systemOfTextBlockParams(listOf(systemPrompt))
-                .addUserMessage(event)
+                .apply {
+                    history.forEach { (pastEvent, pastReply) ->
+                        addUserMessage(pastEvent)
+                        addAssistantMessage(pastReply)
+                    }
+                }.addUserMessage(event)
                 .build()
         val reply = complete(request)
         val result = parseReply(reply)
-        if (result.isSuccess) return result.getOrThrow()
+        if (result.isSuccess) {
+            remember(event, reply)
+            return result.getOrThrow()
+        }
 
         val error = result.exceptionOrNull()?.message
         Log.w(TAG, "Invalid reply ($error), retrying once")
@@ -107,10 +127,22 @@ class ClaudeAgent(
                     "Your previous reply was invalid: $error. " +
                         "Reply again with only the corrected JSON array.",
                 ).build()
-        return parseReply(complete(retry)).getOrElse {
-            Log.w(TAG, "Retry was also invalid (${it.message})")
-            listOf(setData("/prompt", "Sorry, something went wrong. Tap the button again."))
-        }
+        val retryReply = complete(retry)
+        return parseReply(retryReply)
+            .onSuccess { remember(event, retryReply) }
+            .getOrElse {
+                Log.w(TAG, "Retry was also invalid (${it.message})")
+                listOf(setData("/prompt", "Sorry, something went wrong. Tap the button again."))
+            }
+    }
+
+    /** Keeps the last [MAX_HISTORY] turns, so a long session's cost per turn stays bounded. */
+    private fun remember(
+        event: String,
+        reply: String,
+    ) {
+        history.addLast(event to reply)
+        if (history.size > MAX_HISTORY) history.removeFirst()
     }
 
     /** Sends [request] and returns the reply text. Cancelling the coroutine cancels the call. */
@@ -149,34 +181,10 @@ class ClaudeAgent(
             Result.failure(e)
         }
 
-    /** Just the title and the `/prompt` text, the same ids the LLM uses for them. */
-    private fun placeholderScreen(): String =
-        message(
-            "updateComponents",
-            "components" to
-                JSONArray()
-                    .put(
-                        JSONObject()
-                            .put("id", "root")
-                            .put("component", "Column")
-                            .put("children", JSONArray().put("title").put("prompt")),
-                    ).put(
-                        JSONObject()
-                            .put("id", "title")
-                            .put("component", "Text")
-                            .put("text", "Coffee order")
-                            .put("variant", "h2"),
-                    ).put(
-                        JSONObject()
-                            .put("id", "prompt")
-                            .put("component", "Text")
-                            .put("text", JSONObject().put("path", "/prompt")),
-                    ),
-        )
-
     private companion object {
         // Generous so a full component tree is never cut off. You're billed for tokens used, not this.
         const val MAX_TOKENS = 16_000L
+        const val MAX_HISTORY = 6
         const val CHECK_SETUP = "Check ANTHROPIC_API_KEY in local.properties and logcat."
     }
 }
