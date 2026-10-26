@@ -13,7 +13,8 @@ Either way, you can watch user input turn into agent output turn into components
 
 |`FakeAgent`|`ClaudeAgent`|
 |:---:|:---:|
-|https://github.com/user-attachments/assets/c237d74f-df62-4f54-873e-1206fafb72f4|https://github.com/user-attachments/assets/a91ce07e-df74-4914-a519-db2c44257a5a|
+|https://github.com/user-attachments/assets/c237d74f-df62-4f54-873e-1206fafb72f4|https://github.com/user-attachments/assets/54b8f9a9-b07a-42c5-95b4-687ded96de7e|
+
 
 
 
