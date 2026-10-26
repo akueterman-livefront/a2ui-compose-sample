@@ -29,6 +29,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
         buildConfigField("String", "ANTHROPIC_API_KEY", "\"$anthropicApiKey\"")
         buildConfigField("String", "ANTHROPIC_MODEL", "\"$anthropicModel\"")
     }
@@ -50,4 +52,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(libs.anthropic.java)
+
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
 }

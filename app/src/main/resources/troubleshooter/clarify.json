@@ -1,0 +1,83 @@
+[
+  {
+    "version": "v0.9.1",
+    "updateDataModel": {
+      "surfaceId": "main",
+      "path": "/prompt",
+      "value": "Happy to help. Two quick questions so I can narrow it down."
+    }
+  },
+  {
+    "version": "v0.9.1",
+    "updateDataModel": {
+      "surfaceId": "main",
+      "path": "/answers",
+      "value": { "method": [], "taste": [] }
+    }
+  },
+  {
+    "version": "v0.9.1",
+    "updateComponents": {
+      "surfaceId": "main",
+      "components": [
+        {
+          "id": "root",
+          "component": "Column",
+          "children": ["title", "prompt", "method_picker", "taste_picker", "answers_send", "start_over"]
+        },
+        { "id": "title", "component": "Text", "text": "Brew troubleshooter", "variant": "h2" },
+        { "id": "prompt", "component": "Text", "text": { "path": "/prompt" } },
+        {
+          "id": "method_picker",
+          "component": "ChoicePicker",
+          "label": "How do you brew it?",
+          "variant": "mutuallyExclusive",
+          "options": [
+            { "label": "Espresso", "value": "espresso" },
+            { "label": "Pour-over", "value": "pourOver" },
+            { "label": "French press", "value": "frenchPress" },
+            { "label": "Drip machine", "value": "drip" },
+            { "label": "Cold brew", "value": "coldBrew" }
+          ],
+          "value": { "path": "/answers/method" }
+        },
+        {
+          "id": "taste_picker",
+          "component": "ChoicePicker",
+          "label": "How does it taste?",
+          "variant": "multipleSelection",
+          "displayStyle": "chips",
+          "options": [
+            { "label": "Sour", "value": "sour" },
+            { "label": "Bitter", "value": "bitter" },
+            { "label": "Weak or watery", "value": "weak" },
+            { "label": "Dry or harsh", "value": "astringent" },
+            { "label": "Flat or stale", "value": "flat" }
+          ],
+          "value": { "path": "/answers/taste" }
+        },
+        {
+          "id": "answers_send",
+          "component": "Button",
+          "child": "answers_send_label",
+          "variant": "primary",
+          "action": {
+            "event": {
+              "name": "answerQuestions",
+              "context": { "method": { "path": "/answers/method" }, "taste": { "path": "/answers/taste" } }
+            }
+          }
+        },
+        { "id": "answers_send_label", "component": "Text", "text": "Next" },
+        {
+          "id": "start_over",
+          "component": "Button",
+          "child": "start_over_label",
+          "variant": "borderless",
+          "action": { "event": { "name": "startOver", "context": {} } }
+        },
+        { "id": "start_over_label", "component": "Text", "text": "Start over" }
+      ]
+    }
+  }
+]

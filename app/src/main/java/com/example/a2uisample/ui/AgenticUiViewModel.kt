@@ -14,15 +14,17 @@ import androidx.compose.material3.a2ui.catalog.MaterialA2uiBasicCatalogV1Default
 import androidx.compose.material3.a2ui.catalog.materialA2uiBasicCatalogV1
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.a2uisample.TAG
 import com.example.a2uisample.agent.Agent
 import com.example.a2uisample.agent.createAgent
+import com.example.a2uisample.logLong
 import com.example.a2uisample.ui.catalog.RadioChoicePicker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-
-private const val TAG = "A2UI"
+import org.json.JSONException
+import org.json.JSONObject
 
 class AgenticUiViewModel : ViewModel() {
     // Parses raw JSON strings into typed A2UI protocol messages.
@@ -69,9 +71,17 @@ class AgenticUiViewModel : ViewModel() {
     }
 
     private fun onAgentMessage(json: String) {
-        Log.d(TAG, "agent -> client:\n$json")
+        logLong("agent -> client:\n${prettyPrint(json)}")
         processor.processInput(parser, json)
     }
+
+    // Agents may send compact JSON (Claude's replies are). Re-indent it so the log is readable.
+    private fun prettyPrint(json: String): String =
+        try {
+            JSONObject(json).toString(2)
+        } catch (e: JSONException) {
+            json
+        }
 
     private suspend fun onOutboundMessage(message: A2uiClientToServerMessage) {
         Log.d(TAG, "client -> agent: $message")

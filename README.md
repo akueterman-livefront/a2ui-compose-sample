@@ -2,12 +2,12 @@
 
 A small, interactive [A2UI](https://a2ui.org/) demo on Android, using the official AndroidX renderer (`androidx.a2ui` / `material3-a2ui` `1.0.0-alpha01`, protocol v0.9.1).
 
-Two agents implement the same `Agent` interface, so you can pick either one:
+Two agents implement the same `Agent` interface and show two different uses of A2UI:
 
 - **`FakeAgent`** (the default): no network and no setup. The coffee flow is hard-coded in Kotlin, and it answers with the same A2UI JSON a real agent would send.
-- **`ClaudeAgent`** (opt-in): a real LLM writes the A2UI JSON from a plain-English prompt. See [Use a real LLM (Claude)](#use-a-real-llm-claude).
+- **`ClaudeAgent`** (opt-in): a brew troubleshooter. You describe what's wrong with your coffee, and a real LLM designs each screen to fit the problem. See [Use a real LLM (Claude)](#use-a-real-llm-claude).
 
-Either way, you can watch user input turn into agent output turn into components.
+Either way, you can watch user input turn into agent output turn into components. The coffee order is a fixed flow, so `FakeAgent` can script it. The troubleshooter isn't: what to ask and what to show depend on what the user says, which is where an LLM generating the UI earns its keep.
 
 ## Demo
 
@@ -21,7 +21,7 @@ Either way, you can watch user input turn into agent output turn into components
 
 
 
-## Flow
+## Flow (`FakeAgent`)
 
 ```
    Agent ──JSON──▶ A2uiMessageParser ─▶ A2uiMessageProcessor ─▶ activeSurfaces ─▶ A2uiSurface (Compose)
@@ -50,8 +50,9 @@ Source is under `app/src/main/java/com/example/a2uisample/`, in three packages: 
 |---|---|
 | `agent/Agent.kt` | The `Agent` interface both agents implement, and `createAgent()`, which picks one from `local.properties` |
 | `agent/FakeAgent.kt` | The offline "model": decides the next step from each event in Kotlin and builds the A2UI messages |
-| `agent/ClaudeAgent.kt` | The real agent: sends each event to Claude, validates the A2UI JSON it returns, and retries once if the JSON is invalid |
-| `agent/CoffeeAgentPrompt.kt` | Claude's system prompt: the coffee flow in plain English, plus the renderer's catalog as JSON Schema |
+| `agent/ClaudeAgent.kt` | The troubleshooter: sends each event and the session so far to Claude, validates the A2UI JSON it returns, and retries once if the JSON is invalid |
+| `agent/TroubleshooterPrompt.kt` | Claude's system prompt: role, output rules, a short UI description, the renderer's catalog as JSON Schema, and the example replies |
+| `resources/troubleshooter/*.json` | Example replies the prompt includes. `start.json` is also the opening screen. Checked by `TroubleshooterExamplesTest` |
 | `agent/A2uiMessages.kt` | Builders for the envelope, `createSurface` and `updateDataModel` messages both agents use |
 | `ui/AgenticUiViewModel.kt` | Parser, Material 3 catalog (with the override), processor, both directions of traffic |
 | `ui/catalog/RadioChoicePicker.kt` | Custom `ChoicePicker` renderer (radio buttons) plugged into the catalog |
@@ -80,9 +81,9 @@ agent -> client: updateComponents root.children += sweetness_slider, sweetness_n
 
 ## Use a real LLM (Claude)
 
-With `ClaudeAgent`, Claude writes the UI. The rules that live in `FakeAgent.respondTo` as Kotlin are written in plain English in `CoffeeAgentPrompt.kt`, and each turn Claude replies with the A2UI messages for the next screen.
+With `ClaudeAgent`, the app becomes a brew troubleshooter. Describe the problem in your own words, for example "my espresso is sour and runs in 18 seconds". Claude replies with a diagnosis card, a recipe card with concrete changes, and only the inputs it needs to hear how the next brew went (a shot-time slider for espresso, a brew-time one for pour-over, taste chips). If your description is too vague, it asks a couple of questions with pickers first. Report back and it adjusts the recipe, building on what you already tried.
 
-It also adds the step only an LLM can handle: the order opens with a text field. Type something like "iced coffee, not too sweet, to go" and tap Send (`describeOrder`, with context `request`). Claude works out the order, pre-fills the pickers, and skips straight to a review screen. The review screen has no Next buttons: you adjust anything you like, and Place order sends the whole form as it stands. If it can't tell hot from cold, it asks and falls back to the guided steps. If you ask for something off the menu, such as oat milk, it picks the closest option and says so. All of that comes from the prompt. There is no parsing code in the app.
+There is no scripted flow. The prompt follows the pattern the [A2UI agent SDK](https://github.com/google/A2UI) uses: a one-line role, output rules, a short UI description ("if you can't diagnose yet, ask like CLARIFY_EXAMPLE"), the catalog schema, and complete example replies. The examples do most of the work: Claude copies their structure and picks its own components, ids and event names. `TroubleshooterExamplesTest` runs the examples through the A2UI parser, so a broken example can't teach Claude a broken pattern. Run it with `./gradlew :app:connectedDebugAndroidTest`, since the parser needs a device.
 
 1. Create an API key at [console.anthropic.com](https://console.anthropic.com/).
 2. Add it to `local.properties` in the project root. The file is gitignored, so the key stays on your machine.
@@ -94,9 +95,9 @@ It also adds the step only an LLM can handle: the order opens with a text field.
 
 To use a different model, also set `ANTHROPIC_MODEL` in `local.properties`, for example `ANTHROPIC_MODEL=claude-sonnet-5-5`. The default is `claude-haiku-4-5`, the cheapest and fastest. To switch back to `FakeAgent`, remove the key and rebuild.
 
-**Cost.** Each tap is one stateless request: the system prompt plus the event that just happened, with no chat history. On Haiku 4.5 ($1 / $5 per million input / output tokens) that's roughly 3K tokens in and 1K out, so under a cent per tap and a few cents for a full order. Logcat prints the token counts for every turn.
+**Cost.** The opening screen comes from `start.json`, so it costs nothing. Each tap after that is one request: the system prompt (about 11K tokens, cached after the first request) plus the session so far, capped at the last 6 turns, and the new event. On Haiku 4.5 that's about 1K output tokens per turn, roughly a cent. Start over clears the session. Logcat prints the token counts for every turn.
 
-**How a turn works.** The app shows "Thinking…" right away, then sends the event (`{"name":"chooseAddIns","context":{...}}`) to Claude. Before anything reaches the renderer, it checks the reply with the same `A2uiMessageParser` the renderer uses. If the reply isn't valid A2UI, the app sends the error back to Claude and asks once more. API errors (a bad key, no network) appear in the prompt text instead of crashing.
+**How a turn works.** The app shows "Thinking…" right away, then sends the event (`{"name":"reportResult","context":{...}}`) to Claude, after the earlier turns of the session. Before anything reaches the renderer, it checks the reply with the same `A2uiMessageParser` the renderer uses. If the reply isn't valid A2UI, the app sends the error back to Claude and asks once more. API errors (a bad key, no network) appear in the prompt text instead of crashing.
 
 **Things to know:**
 
