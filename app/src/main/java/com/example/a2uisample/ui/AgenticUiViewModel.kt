@@ -19,6 +19,7 @@ import com.example.a2uisample.TAG
 import com.example.a2uisample.agent.Agent
 import com.example.a2uisample.agent.createAgent
 import com.example.a2uisample.logLong
+import com.example.a2uisample.toLogString
 import com.example.a2uisample.ui.catalog.RadioChoicePicker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
@@ -90,7 +91,7 @@ class AgenticUiViewModel : ViewModel() {
         }
 
     private suspend fun onOutboundMessage(message: A2uiClientToServerMessage) {
-        Log.d(TAG, "client -> agent: $message")
+        logLong("client -> agent: ${message.toLogString()}")
         when (message) {
             is A2uiClientEventMessage -> {
                 agent.respondTo(message).collect(::onAgentMessage)
