@@ -9,7 +9,7 @@ import org.json.JSONObject
 internal const val SURFACE_ID = "main"
 
 // The Basic Catalog ID the AndroidX renderer registers. The agent must reference the same ID.
-internal const val CATALOG_ID = A2uiBasicCatalogV1.CatalogId
+internal val CATALOG_ID = A2uiBasicCatalogV1.CatalogId
 
 internal fun createSurface(): String = message("createSurface", "catalogId" to CATALOG_ID)
 
