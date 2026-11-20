@@ -1,6 +1,6 @@
 # A2UI Compose Sample
 
-A small, interactive [A2UI](https://a2ui.org/) demo on Android, using the official AndroidX renderer (`androidx.a2ui` / `material3-a2ui` `1.0.0-alpha01`, protocol v0.9.1).
+A small, interactive [A2UI](https://a2ui.org/) demo on Android, using the official AndroidX renderer (`androidx.a2ui` / `material3-a2ui` `1.0.0-alpha02`, protocol v0.9.1).
 
 Two agents implement the same `Agent` interface and show two different uses of A2UI:
 

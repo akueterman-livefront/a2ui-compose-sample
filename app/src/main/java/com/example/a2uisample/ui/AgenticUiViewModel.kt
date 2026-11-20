@@ -3,13 +3,14 @@ package com.example.a2uisample.ui
 import android.util.Log
 import androidx.a2ui.compose.runtime.A2uiMessageParser
 import androidx.a2ui.compose.ui.A2uiMessageProcessor
+import androidx.a2ui.compose.ui.catalog.A2uiBasicCatalogV1
 import androidx.a2ui.compose.ui.toJsonSchemaString
-import androidx.a2ui.model.catalog.functions.A2uiLocaleProvider
 import androidx.a2ui.model.processor.A2uiSurfaceModel
 import androidx.a2ui.model.processor.processInput
 import androidx.a2ui.model.protocol.A2uiClientErrorMessage
 import androidx.a2ui.model.protocol.A2uiClientEventMessage
 import androidx.a2ui.model.protocol.A2uiClientToServerMessage
+import androidx.a2ui.model.protocol.A2uiExecutionContext
 import androidx.compose.material3.a2ui.catalog.MaterialA2uiBasicCatalogV1Defaults
 import androidx.compose.material3.a2ui.catalog.materialA2uiBasicCatalogV1
 import androidx.lifecycle.ViewModel
@@ -37,9 +38,14 @@ class AgenticUiViewModel : ViewModel() {
             image = MaterialA2uiBasicCatalogV1Defaults.image { _, _, _, _, _ -> },
             video = MaterialA2uiBasicCatalogV1Defaults.video { _, _, _ -> },
             audioPlayer = MaterialA2uiBasicCatalogV1Defaults.audioPlayer { _, _, _, _ -> },
-            urlOpener = {},
-            messageFormatter = { pattern, _, _ -> pattern },
-            localeProvider = A2uiLocaleProvider.Default,
+            // Default function implementations (default locale); opening URLs is a no-op.
+            functions =
+                object : A2uiBasicCatalogV1.Functions {
+                    override fun openUrl(
+                        url: String,
+                        executionContext: A2uiExecutionContext,
+                    ) = Unit
+                },
             choicePicker = RadioChoicePicker, // Specific override
         )
 
